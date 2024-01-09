@@ -141,5 +141,6 @@ coqProver _ (ProofSearchQuery coqSig coqCtx coqTyp) = do
   StrictT.putStrLn output
 
 mkTheorem :: [(D.VarName,DTTpreterm)] -> DTTpreterm -> StrictT.Text
-mkTheorem ctx typ = ""
+mkTheorem ctx typ = T.toStrict $ T.concat [(T.intercalate " -> " (L.nub (map (\ (var, preterm) -> (convcoq preterm)) ctx))), " -> ", (convcoq typ)]
+-- preterm1 -> preterm2 -> preterm3 ... -> typ の形
 
