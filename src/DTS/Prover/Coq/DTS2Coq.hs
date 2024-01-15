@@ -8,7 +8,8 @@ Stability   : beta
 -}
 
 module DTS.Prover.Coq.DTS2Coq (
-  coqProver
+  convcoq
+  , coqProver
   ) where
 
 import qualified System.Environment as E --base
@@ -137,7 +138,9 @@ coqProver _ (ProofSearchQuery coqSig coqCtx coqTyp) = do
                   "Theorem trm : ", mkTheorem (D.fromDeBruijnList coqCtx) (D.fromDeBruijn coqTyp), ".\n",
                   "Proof. repeat (eexists; firstorder; eauto). Qed. Print trm.\n"
                   ]
-  output <- S.shelly $ S.silently $ S.escaping False $ S.cmd $ S.fromText $ StrictT.concat ["echo \"", coqcode, "\" | coqtop"]
+  StrictT.writeFile "test.v" coqcode
+  --output <- S.shelly $ S.silently $ S.escaping False $ S.cmd $ S.fromText $ StrictT.concat ["echo \"", coqcode, "\" | coqtop"]
+  output <- S.shelly $ S.silently $ S.escaping False $ S.cmd $ S.fromText $ StrictT.concat ["cat test.v"]
   StrictT.putStrLn output
 
 mkTheorem :: [(D.VarName,DTTpreterm)] -> DTTpreterm -> StrictT.Text
