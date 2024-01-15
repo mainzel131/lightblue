@@ -89,6 +89,11 @@ executables:
     main:         buildLexicon.hs
     ghc-options:  [-threaded, -rtsopts, -with-rtsopts=-N]
     dependencies: lightblue
+  dts2coq:
+    source-dirs:  app/dts2coq
+    main:         Main.hs
+    ghc-options:  [-threaded, -rtsopts, -with-rtsopts=-N]
+    dependencies: lightblue
     
 tests:
   testJumanDicSettings:
