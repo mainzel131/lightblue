@@ -49,7 +49,7 @@ norm_cname cname = case T.uncons cname of
 cname_f :: T.Text -> T.Text
 cname_f cname = T.concat ["c_", norm_cname (head $ T.split (==';') cname)]
 
--- function: f
+-- function: f (Prologの式に直しているのでは？？？)
 f :: DTTpreterm -> T.Text
 f preterm = case preterm of
   D.Var v -> toText v
@@ -100,21 +100,30 @@ convcoq preterm = case preterm of
   D.Type  -> "Prop"
   D.Kind  -> "Kind"
   D.Pi vname a b    -> T.concat ["forall ", toText vname, ":", (convcoq $ a), ", ", (convcoq $ b)]
-  D.Sigma vname a b -> T.concat ["exists ", toText vname, ":", (convcoq $ a), ", ", (convcoq $ b)]
+  D.Sigma vname a b -> T.concat ["(exists ", toText vname, ":", (convcoq $ a), ", ", (convcoq $ b), ")"]
   D.Not a           -> T.concat ["not ", (convcoq $ a)]
-  D.Lam vname b     -> T.concat ["lam(", toText vname, ",", (convcoq $ b), ")"]
+  D.Lam vname b     -> T.concat ["(fun ", toText vname, " => (", (convcoq $ b), "))"]
+  -- D.Lam vname b     -> T.concat ["lam(", toText vname, ",", (convcoq $ b), ")"]
   D.Pair t u        -> T.concat ["(", (convcoq $ t), ",", (convcoq $ u), ")"]
-  D.Proj D.Fst t    -> T.concat ["projT1", (convcoq $ t)]
-  D.Proj D.Snd t    -> T.concat ["projT2", (convcoq $ t)]
+  D.Proj D.Fst t    -> T.concat ["(ex_proj1 ", (convcoq $ t), ")"]
+  D.Proj D.Snd t    -> T.concat ["(ex_proj2 ", (convcoq $ t), ")"]
+  -- D.Proj D.Fst t    -> T.concat ["projT1 ", (convcoq $ t)]
+  -- D.Proj D.Snd t    -> T.concat ["projT2 ", (convcoq $ t)]
   D.Eq _ m n        -> T.concat ["eq ", (convcoq $ m), " ", (convcoq $ n)]
   D.Top -> "True"
   D.Bot -> "False"
   D.App (D.App (D.App (D.App g x1) x2) x3) x4
-                        -> T.concat ["_", (convcoq $ g), " ", (convcoq $ x1), " ", (convcoq $ x2), " ", (convcoq $ x3), " ", (convcoq $ x4)]
+                        -> T.concat [(convcoq $ g), " ", (convcoq $ x4), " ", (convcoq $ x3), " ", (convcoq $ x2), " ", (convcoq $ x1)]
   D.App (D.App (D.App g x1) x2) x3
-                        -> T.concat ["_", (convcoq $ g), " ", (convcoq $ x1), " ", (convcoq $ x2), " ", (convcoq $ x3)]
-  D.App (D.App g x1) x2 -> T.concat ["_", (convcoq $ g), " ", (convcoq $ x1), " ", (convcoq $ x2)]
-  D.App g x1            -> T.concat ["_", (convcoq $ g), " ", (convcoq $ x1)]
+                        -> T.concat [(convcoq $ g), " ", (convcoq $ x3), " ", (convcoq $ x2), " ", (convcoq $ x1)]
+  D.App (D.App g x1) x2 -> T.concat [(convcoq $ g), " ", (convcoq $ x2), " ", (convcoq $ x1)]
+  D.App g x1            -> T.concat [(convcoq $ g), " ", (convcoq $ x1)]
+  -- D.App (D.App (D.App (D.App g x1) x2) x3) x4
+                        -- -> T.concat ["_", (convcoq $ g), " ", (convcoq $ x1), " ", (convcoq $ x2), " ", (convcoq $ x3), " ", (convcoq $ x4)]
+  -- D.App (D.App (D.App g x1) x2) x3
+                        -- -> T.concat ["_", (convcoq $ g), " ", (convcoq $ x1), " ", (convcoq $ x2), " ", (convcoq $ x3)]
+  -- D.App (D.App g x1) x2 -> T.concat ["_", (convcoq $ g), " ", (convcoq $ x1), " ", (convcoq $ x2)]
+  -- D.App g x1            -> T.concat ["_", (convcoq $ g), " ", (convcoq $ x1)]
   D.Unit         -> "Unit"
   D.Nat          -> "Nat"
   D.Zero         -> "Zero"
@@ -124,7 +133,7 @@ convcoq preterm = case preterm of
   D.Idpeel m n   -> T.concat ["Idpeel ", (convcoq $ m), " ", (convcoq $ n)]
 
 makeCoqSigList :: D.Signature -> T.Text
-makeCoqSigList siglist = T.concat (L.nub (map (\ (text, preterm) -> T.concat ["Parameter _", (cname_f text), " : ", (convcoq preterm), ". \n"]) siglist))
+makeCoqSigList siglist = T.concat (L.nub (map (\ (text, preterm) -> T.concat ["Parameter _", (cname_f text), " : ", (convcoq preterm), ".\n"]) siglist))
 
 coqProver :: TQ.ProofSearchSetting -> TQ.ProofSearchQuery -> IO ()
 coqProver _ (ProofSearchQuery coqSig coqCtx coqTyp) = do
@@ -133,13 +142,18 @@ coqProver _ (ProofSearchQuery coqSig coqCtx coqTyp) = do
       coqcode = StrictT.concat [
                   --"Add LoadPath \\\"", lightbluepath,
                   --"\\\".\nRequire Export coqlib.\n",
-                  "Parameters Entity Evt : Type.\n",
+                  "Parameter Entity : Prop.\n",
+                  "Parameter Evt : Type.\n",
                   coqsig,
                   "Theorem trm : ", mkTheorem (D.fromDeBruijnList coqCtx) (D.fromDeBruijn coqTyp), ".\n",
-                  "Proof. repeat (eexists; firstorder; eauto). Qed. Print trm.\n"
+                  -- "Proof.\n", repeat (eexists; firstorder; eauto).\n",
+                  "Proof.\n",
+                  "  --tatics.--\n",
+                  "Defined.\n",
+                  "Print trm.\n"
                   ]
   StrictT.writeFile "test.v" coqcode
-  --output <- S.shelly $ S.silently $ S.escaping False $ S.cmd $ S.fromText $ StrictT.concat ["echo \"", coqcode, "\" | coqtop"]
+  -- output <- S.shelly $ S.silently $ S.escaping False $ S.cmd $ S.fromText $ StrictT.concat ["echo \"", coqcode, "\" | coqtop"]
   output <- S.shelly $ S.silently $ S.escaping False $ S.cmd $ S.fromText $ StrictT.concat ["cat test.v"]
   StrictT.putStrLn output
 
