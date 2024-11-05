@@ -23,35 +23,43 @@ module Parser.ChartParser (
   -- * Partial parsing function(s)
   , ParseResult(..)
   , extractParseResult
-  --bestOnly
   ) where
 
 import Data.List as L
 import Data.Char                          --base
 import System.IO.Unsafe (unsafePerformIO) --base
-import qualified Data.Text.Lazy as T   --text
+import qualified Data.Text.Lazy as T      --text
+import qualified Data.Text.Lazy.IO as T   --text
 import qualified Data.Map as M         --container
 import qualified Parser.CCG as CCG --(Node, unaryRules, binaryRules, trinaryRules, isCONJ, cat, SimpleText)
 import Parser.Language (LangOptions(..),jpOptions)
 import qualified Parser.Language.Japanese.Juman.CallJuman as Juman
-import qualified Parser.Language.Japanese.Lexicon as L (LexicalItems, lookupLexicon, setupLexicon, emptyCategories)
+import qualified Parser.Language.Japanese.Lexicon as L (LexicalResource(..), lexicalResourceBuilder, LexicalItems, lookupLexicon, setupLexicon, emptyCategories, myLexicon)
 import qualified Parser.Language.Japanese.Templates as LT
+import qualified DTS.QueryTypes as QT
 
 {- Main functions -}
 
 -- | The type for CYK-charts.
 data ParseSetting = ParseSetting {
-  langOptions :: LangOptions  -- ^ Language options
-  , morphaName :: Juman.MorphAnalyzerName -- ^ Morphological analyzer
-  , beamWidth :: Int          -- ^ The beam width
-  --, nBest :: Int              -- ^ take n-best results from all parsing results
-  , ifPurify :: Bool          -- ^ If True, apply purifyText to the input text before parsing
+  langOptions :: LangOptions   -- ^ Language options
+  , lexicalResource :: L.LexicalResource
+  -- , morphaName :: Juman.MorphAnalyzerName -- ^ Morphological analyzer
+  , beamWidth :: Int           -- ^ The beam width
+  , nParse :: Int              -- ^ Show N-best parse trees for each sentence
+  , nTypeCheck :: Int          -- ^ Show N-best type check diagram for each logical form
+  , nProof :: Int              -- ^ Show N-best proof diagram for each proof search
+  , ifPurify :: Bool           -- ^ If True, apply purifyText to the input text before parsing
   , ifDebug :: Maybe (Int,Int) -- ^ Debug mode: If Just (i,j), then debug mode and dump parse result of (i,j). If Nothing, then non-debug mode
   , ifFilterNode :: Maybe (Int -> Int -> [CCG.Node] -> [CCG.Node]) -- ^ filter for CCG nodes.  Nothing: no filtering
+  , noInference :: Bool        -- ^ If True, it is an inference and execute proof search
+  , verbose :: Bool            -- ^ If True, type checker and inferer dump logs
   } 
 
-defaultParseSetting :: ParseSetting
-defaultParseSetting = ParseSetting jpOptions Juman.KWJA 32 True Nothing Nothing
+defaultParseSetting :: IO ParseSetting
+defaultParseSetting = do
+  lr <- L.lexicalResourceBuilder Juman.KWJA
+  return $ ParseSetting jpOptions lr 32 (-1) (-1) (-1) True Nothing Nothing True False
 
 type Chart = M.Map (Int,Int) [CCG.Node]
 
@@ -68,7 +76,7 @@ parse ParseSetting{..} sentence
           nodeFilter = case ifFilterNode of
                          Just filter -> filter
                          Nothing -> (\_ _ -> id)
-      lexicon <- L.setupLexicon morphaName sentenceToParse
+      lexicon <- L.setupLexicon lexicalResource sentenceToParse
       let (chart,_,_,_) = T.foldl' (chartAccumulator ifDebug beamWidth lexicon nodeFilter) 
                                    (M.empty,[0],0,T.empty)
                                    sentenceToParse
@@ -93,7 +101,8 @@ simpleParse' :: Maybe (Int,Int)   -- ^ Debug mode: If Just (i,j), dump parse res
             -> T.Text -- ^ an input text
             -> IO([CCG.Node],Chart)
 simpleParse' ifDebug beamW ifPurify filterNodes sentence = do
-  chart <- parse (ParseSetting jpOptions Juman.KWJA beamW ifPurify ifDebug (Just filterNodes)) sentence
+  lexicalResource <- L.lexicalResourceBuilder Juman.KWJA
+  chart <- parse (ParseSetting jpOptions lexicalResource beamW 1 1 1 ifPurify ifDebug (Just filterNodes) True False) sentence
   case extractParseResult beamW chart of
     Full nodes -> return (nodes,chart)
     Partial nodes -> return (nodes,chart)
