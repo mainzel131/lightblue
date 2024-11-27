@@ -102,15 +102,10 @@ forEq context term =
                   (\pair ->
                     case pair of
                       [A.Arrow fArg fRes,A.Arrow xArg xRes] -> 
-                        -- let A.Arrow xArg' xRes' = A.shiftIndices (A.Arrow xArg xRes) (length fArg) 0
-                        --     arg = xArg' ++ fArg
-                        --     res = A.ArrowApp (A.shiftIndices fRes (length xArg) 0) (xRes')
-                        -- in A.Arrow arg res
-                        case A.shiftIndices (A.Arrow xArg xRes) (length fArg) 0 of
-                          A.Arrow xArg' xRes' -> let arg = xArg' ++ fArg
-                                                     res = A.ArrowApp (A.shiftIndices fRes (length xArg) 0) (xRes')
-                                                 in A.Arrow arg res
-                          _ -> A.Arrow xArg xRes -- | ToDo: これは間違い。どうにかする
+                        let A.Arrow xArg' xRes' = case A.shiftIndices (A.Arrow xArg xRes) (length fArg) 0 of A.Arrow h t->A.Arrow h t;t -> A.Arrow [] t
+                            arg = xArg' ++ fArg
+                            res = A.ArrowApp (A.shiftIndices fRes (length xArg) 0) (xRes')
+                        in A.Arrow arg res
                       _ -> D.trace ("forEq ここに来るはずはない") undefined)
                   arEqTypes)
               A.ArrowProj ars ar -> 
