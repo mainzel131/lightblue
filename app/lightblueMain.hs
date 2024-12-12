@@ -264,7 +264,7 @@ lightblueMain (Options commands style filepath morphaName beamW nParse nTypeChec
     -- |
     -- | Parse
     -- |
-     lightblueMainLocal (Parse output proverName) lr contents = do
+    lightblueMainLocal (Parse output proverName) lr contents = do
       let handle = S.stdout
           parseSetting = CP.ParseSetting jpOptions lr beamW nParse nTypeCheck nProof True Nothing Nothing noInference verbose
           prover = NLI.getProver proverName $ QT.ProofSearchSetting (Just maxDepth) Nothing (Just QT.Intuitionistic)
