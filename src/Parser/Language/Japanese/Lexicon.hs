@@ -29,6 +29,7 @@ import qualified Data.List as L          -- base
 import qualified Data.Map as M           -- base
 import Parser.CCG
 import qualified Parser.Language.Japanese.MyLexicon as LEX
+import qualified Parser.Language.Japanese.JsemLexicon as JLEX
 import Parser.Language.Japanese.Templates
 import qualified Parser.Language.Japanese.Juman.CallJuman as JU
 import DTS.UDTTdeBruijn as UDTT         --lightblue
@@ -76,7 +77,7 @@ setupLexicon JapaneseSetA{..} sentence = do
   let commonnouns = map (\(hyoki, (daihyo,score')) -> lexicalitem hyoki "(CN)" score' N (commonNounSR daihyo)) $ M.toList cn
   let propernames = map (\(hyoki, (daihyo,score')) -> lexicalitem hyoki "(PN)" score' ((T True 1 modifiableS `SL` (T True 1 modifiableS `BS` NP [F[Nc]]))) (properNameSR daihyo)) $ M.toList pn
   --  5. 1+2+3+4
-  let numeration = jumandicParsed ++ mylexiconFiltered ++ commonnouns ++ propernames ++ jumanCN
+  let numeration = jumandicParsed ++ mylexiconFiltered ++ commonnouns ++ propernames ++ jumanCN ++JLEX.verbLexicon
   return $ numeration `seq` numeration
 
 -- | Read each line in "Juman.dic" and convert it to a CCG lexical item
