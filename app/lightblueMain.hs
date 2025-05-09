@@ -311,7 +311,8 @@ lightblueMain (Options lang commands style proverName filepath beamW nParse nTyp
         StrictT.putStrLn $ J.hypothesis j
         S.putStr "\n"
         let sentences = reverse $ (T.fromStrict $ J.hypothesis j):(map T.fromStrict $ J.premises j)
-            parseResult = NLI.parseWithTypeCheck parseSetting prover [("ma1", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.App (DTT.App (DTT.App (DTT.Con "破く/やぶく/ガヲ") (DTT.Var 0)) (DTT.Var 1)) (DTT.Var 2)) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "破れる/やぶれる/ガ") (DTT.Var 2)) (DTT.Var 0))))))), ("ma2", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.App (DTT.App (DTT.App (DTT.Con "閉める/しめる/ガヲ") (DTT.Var 0)) (DTT.Var 1)) (DTT.Var 2)) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "閉まる/しまる/ガ") (DTT.Var 2)) (DTT.Var 0)))))))] [] sentences
+            parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity)] [] sentences
+            -- parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity), ("ma1", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.App (DTT.App (DTT.App (DTT.Con "破く/やぶく/ガヲ") (DTT.Var 0)) (DTT.Var 1)) (DTT.Var 2)) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "破れる/やぶれる/ガ") (DTT.Var 2)) (DTT.Var 0))))))), ("ma2", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.App (DTT.App (DTT.App (DTT.Con "閉める/しめる/ガヲ") (DTT.Var 0)) (DTT.Var 1)) (DTT.Var 2)) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "閉まる/しまる/ガ") (DTT.Var 2)) (DTT.Var 0)))))))] [] sentences
         NLI.printParseResult handle style 1 noTypeCheck False title parseResult
         inferenceLabels <- toList $ NLI.trawlParseResult parseResult
         let groundTruth = J.jsemLabel2YesNo $ J.answer j
