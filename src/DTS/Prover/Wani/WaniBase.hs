@@ -61,11 +61,13 @@ import qualified Data.List as L
 import qualified Data.Maybe as M
 import qualified Debug.Trace as D
 
+import qualified Data.Time.Clock as Time
+
 type ATerm = A.Arrowterm
 type AType = A.Arrowterm
 type Depth = Int
 
-type DeduceRule = A.SAEnv -> A.AEnv -> AType -> Depth -> Setting -> Result
+type DeduceRule = A.SAEnv -> A.AEnv -> AType -> Depth -> Setting -> IO Result
 type TypecheckRule = A.SAEnv -> A.AEnv -> ATerm -> AType -> Depth -> Setting -> Result
 
 data ProofMode = Plain | WithDNE | WithEFQ deriving (Show,Eq)
@@ -84,7 +86,10 @@ data Setting = Setting
    maxtime :: Int,
    debug :: Int,
    sStatus :: Status,
-   ruleConHojo :: String} deriving (Show,Eq)
+   ruleConHojo :: String,
+   timeLimit :: M.Maybe Time.UTCTime,
+   enableneuralDTS :: Bool
+   } deriving (Show,Eq)
 
 data Result = Result
   {trees :: [UDT.Tree A.Arrowrule A.AJudgment],
@@ -103,7 +108,7 @@ statusDef :: Status
 statusDef = Status{failedlst=[],usedMaxDepth = 0,deduceNgLst=[],allProof = True}
 
 settingDef :: Setting
-settingDef = Setting{mode = Plain,falsum = True,maxdepth = 9,maxtime = 100000,debug = 0,sStatus = statusDef,ruleConHojo = "sub"}
+settingDef = Setting{mode = Plain,falsum = True,maxdepth = 9,maxtime = 100000,debug = 0,sStatus = statusDef,ruleConHojo = "sub",enableneuralDTS=False}
 
 resultDef :: Result
 resultDef = Result{trees = [],errMsg = "",rStatus = statusDef}
@@ -150,7 +155,7 @@ termFromGoal (Goal _ _ maybeProofTerm _ ) = maybeProofTerm
 typesFromGoal :: Goal -> [ProofType]
 typesFromGoal (Goal _ _ _ proofTypes) = proofTypes
 
-type Rule = Goal -> Setting -> ([SubGoalSet],T.Text)
+type Rule = Goal -> Setting -> IO ([SubGoalSet],T.Text)
 
 data SubGoal = 
   SubGoal 
