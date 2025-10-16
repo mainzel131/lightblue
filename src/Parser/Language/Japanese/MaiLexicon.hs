@@ -1,5 +1,6 @@
-module Parser.Language.Japanese.JsemLexicon (
+module Parser.Language.Japanese.MaiLexicon (
   verbLexicon,
+  nriLexicon
   ) where
 
 import qualified Data.Text.Lazy as T
@@ -25,4 +26,10 @@ verbLexicon = concat $ [
         ((Lam (Lam (Lam (Lam (Sigma (App (App (Var 3) (Var 1)) terminator) (App (App (Var 3) (Var 2)) (Var 1))))))), []),
   -- for 699
   mylex ["打ち合わせ"] "new" (N) (predSR 1 "打ち合わせ/うちあわせ")
+  ]
+
+nriLexicon :: [Node]
+nriLexicon = concat $ [
+  mylex ["NRI"] "new" (N) (predSR 1 "NRI"),
+  mylex ["user"] "new" (N) (predSR 1 "user")
   ]
