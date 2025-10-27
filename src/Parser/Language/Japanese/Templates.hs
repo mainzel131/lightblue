@@ -317,7 +317,10 @@ adjunctCM c = ((Lam (Lam (Lam (App (Var 1) (Lam (Sigma (App (App (Con c) (Var 3)
 -- | adjunct nominal modifier
 -- N/N\(T/T\NP[nc]): \p.\n.\x.\c.(nx (\s.p(\z.op(s,z)) X cs)
 adjunctNM :: T.Text -> (UDTTpreterm, Signature)
-adjunctNM c = ((Lam (Lam (Lam (Lam (Lamvec (App (App (Var 3) (Var 2)) (Lam (Sigma (Appvec 1 (App (Var 5) (Lam (App (App (Con c) (Var 0)) (Var 1))))) (App (Var 3) (Var 1)))))))))), 
+-- adjunctNM c = ((Lam (Lam (Lam (Lam (Lamvec (App (App (Var 3) (Var 2)) (Lam (Sigma (Appvec 1 (App (Var 5) (Lam (App (App (Con c) (Var 0)) (Var 1))))) (App (Var 3) (Var 1)))))))))), 
+  -- [(c, nPlaceStateType 1)])
+-- 書き直し　->　\p.\n.\x.\c.(nx (\s.p(\z.op(x,z)) X cs)
+adjunctNM c = ((Lam (Lam (Lam (Lam (Lamvec (App (App (Var 3) (Var 2)) (Lam (Sigma (Appvec 1 (App (Var 5) (Lam (App (App (Con c) (Var 0)) (Var 4))))) (App (Var 3) (Var 1)))))))))), 
   [(c, nPlaceStateType 1)])
 
 andSR :: (UDTTpreterm, Signature)

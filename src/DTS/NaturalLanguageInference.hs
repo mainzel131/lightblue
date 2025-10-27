@@ -108,6 +108,7 @@ type Discourse = [T.Text]
 -- | that is an interface problem between natural language semantics and logic
 parseWithTypeCheck :: CP.ParseSetting -> QT.Prover -> DTT.Signature -> DTT.Context -> Discourse -> ParseResult
 parseWithTypeCheck _ _ _ [] [] = NoSentence     -- ^ Context is empty and no sentece is given 
+----- sentenceが空になったらproofsearchを行う
 parseWithTypeCheck ps prover signtr (typ:contxt) [] = -- ^ Context is given and no more sentence (= All parse done)
   if CP.noInference ps
     then NoSentence
@@ -116,6 +117,8 @@ parseWithTypeCheck ps prover signtr (typ:contxt) [] = -- ^ Context is given and 
              psqNeg = DTT.ProofSearchQuery signtr contxt $ DTT.Pi typ DTT.Bot
              resultNeg = takeNbest (CP.nProof ps) $ prover psqNeg
          in InferenceResults (QueryAndDiagrams psqPos resultPos) (QueryAndDiagrams psqNeg resultNeg)
+----- ここまで
+----- 
 parseWithTypeCheck ps prover signtr contxt (text:texts) = 
   SentenceAndParseTrees text $ 
     --lift $ S.putStrLn $ "nParse = " ++ (show $ CP.nParse ps)

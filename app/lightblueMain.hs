@@ -324,8 +324,10 @@ lightblueMain (Options lang commands style proverName filepath beamW nParse nTyp
             -- parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity), ("hiraku",DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.App (DTT.App (DTT.Con "開く/ひらく/ガ") (DTT.Var 1)) (DTT.Var 0)) (DTT.Pi (DTT.App (DTT.App (DTT.Con "閉まる/しまる/ガ") (DTT.Var 2)) (DTT.Var 1)) (DTT.Bot)))))] [] sentences
             -- 524の公理(閉まるー開く)
             -- parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity), ("shimaru",DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.App (DTT.App (DTT.Con "閉まる/しまる/ガ") (DTT.Var 1)) (DTT.Var 0)) (DTT.Pi (DTT.App (DTT.App (DTT.Con "開く/あく/ガ") (DTT.Var 2)) (DTT.Var 1)) (DTT.Bot)))))] [] sentences
-            -- 開くの公理2
+            -- 開くの公理2(開くー閉まる)
             -- parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity), ("hitraku2", DTT.Pi(DTT.Entity) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "開く/ひらく/ガ") (DTT.Var 1)) (DTT.Var 0))) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "閉まる/しまる/ガ") (DTT.Var 2)) (DTT.Var 0))) (DTT.Bot))))] [] sentences     
+            -- NRI01の公理(関心を高めるー興味がある)
+            -- parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity), ("kanshin-kyomi", (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "関心") (DTT.Var 1)) (DTT.Var 0)) (DTT.App (DTT.App (DTT.Con "＃ヘ") (DTT.Var 3)) (DTT.Var 2)))) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ノ") (DTT.Var 3)) (DTT.Var 1)) (DTT.App (DTT.App (DTT.App (DTT.Con "高める/たかめる/ガヲ") (DTT.Var 2)) (DTT.Con "NRI")) (DTT.Var 5))))) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "興味") (DTT.Var 1)) (DTT.Var 0)))) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.App (DTT.Con "＃存在/ガガ２ニ") (DTT.Var 3)) (DTT.Proj (DTT.Fst) (DTT.Var 1))) (DTT.Var 4)) (DTT.Var 0)))))))))] [] sentences
         NLI.printParseResult handle style 1 noTypeCheck False title parseResult
         inferenceLabels <- toList $ NLI.trawlParseResult parseResult
         let groundTruth = J.jsemLabel2YesNo $ J.answer j

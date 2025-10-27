@@ -31,5 +31,7 @@ verbLexicon = concat $ [
 nriLexicon :: [Node]
 nriLexicon = concat $ [
   mylex ["NRI"] "new" (N) (predSR 1 "NRI"),
-  mylex ["user"] "new" (N) (predSR 1 "user")
+  mylex ["user"] "new" (N) (predSR 1 "user"),
+  mylex ["ために"] "new" ((T False 1 modifiableS `SL` T False 1 modifiableS) `BS` (S [F anyPos,F[Term,NStem],F[P,M],F[P,M],F[P,M],F[M],F[M]]))
+        ((Lam (Lam (Lam (Pi (App (Var 1) terminator) (App (Var 3) (Var 1)))))),[])
   ]
