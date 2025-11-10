@@ -34,7 +34,7 @@ import qualified Data.Char as C           --base
 import qualified Data.Text.Lazy as T      --text
 import qualified Data.Text.Lazy.IO as T   --text
 import qualified Data.List as L           --base
-import ListT (ListT(..),fromFoldable,toList,toReverseList,take,null,uncons,cons) --list-t
+import ListT (ListT(..),fromFoldable,toList,toReverseList,take,null,uncons,cons,drop) --list-t
 import qualified Parser.ChartParser as CP      --lightblue
 import qualified Parser.PartialParsing as Partial --lightblue
 import qualified Parser.CCG as CCG             --lightblue
@@ -112,9 +112,20 @@ parseWithTypeCheck _ _ _ [] [] = NoSentence     -- ^ Context is empty and no sen
 parseWithTypeCheck ps prover signtr (typ:contxt) [] = -- ^ Context is given and no more sentence (= All parse done)
   if CP.noInference ps
     then NoSentence
-    else let psqPos = DTT.ProofSearchQuery signtr contxt $ typ 
+    else let signtr' = [("高める/たかめる/ガヲ", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Type)))),
+                        ("関心", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Type))),
+                        ("＃ヘ", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Type))),
+                        ("＃ノ", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Type))),
+                        ("NRI", DTT.Entity),
+                        ("＃存在/ガガニ", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Type))))),
+                        ("興味", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Type))),
+                        ("投資", DTT.Entity),
+                        ("顧客/こきゃく", DTT.Entity)]
+             typ' = (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "関心") (DTT.Var 1)) (DTT.Var 0)) (DTT.App (DTT.App (DTT.Con "＃ヘ") (DTT.Var 3)) (DTT.Var 2)))) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ノ") (DTT.Con "顧客/こきゃく")) (DTT.Var 1)) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.Con "高める/たかめる/ガヲ") (DTT.Var 3)) (DTT.Con "NRI")) (DTT.Var 0)))))) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "興味") (DTT.Var 1)) (DTT.Var 0)))) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.App (DTT.Con "＃存在/ガガニ") (DTT.Var 3)) (DTT.Proj (DTT.Fst) (DTT.Var 1))) (DTT.Con "顧客/こきゃく")) (DTT.Var 0))))))
+             contxt' = [DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "関心") (DTT.Var 1)) (DTT.Var 0)) (DTT.App (DTT.App (DTT.Con "＃ヘ") (DTT.Var 3)) (DTT.Var 2)))) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ノ") (DTT.Var 3)) (DTT.Var 1)) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.Con "高める/たかめる/ガヲ") (DTT.Var 3)) (DTT.Con "NRI")) (DTT.Var 0)))))) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "興味") (DTT.Var 1)) (DTT.Var 0)))) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.App (DTT.Con "＃存在/ガガニ") (DTT.Var 3)) (DTT.Proj (DTT.Fst) (DTT.Var 1))) (DTT.Var 4)) (DTT.Var 0))))))]
+             psqPos = DTT.ProofSearchQuery signtr' contxt' $ typ' -- contxtがpremise, typがhypothesis
              resultPos = takeNbest (CP.nProof ps) $ prover psqPos
-             psqNeg = DTT.ProofSearchQuery signtr contxt $ DTT.Pi typ DTT.Bot
+             psqNeg = DTT.ProofSearchQuery signtr contxt $ DTT.Pi typ' DTT.Bot
              resultNeg = takeNbest (CP.nProof ps) $ prover psqNeg
          in InferenceResults (QueryAndDiagrams psqPos resultPos) (QueryAndDiagrams psqNeg resultNeg)
 ----- ここまで
@@ -131,20 +142,45 @@ parseWithTypeCheck ps prover signtr contxt (text:texts) =
          let signtr' = L.nub $ (CCG.sig node) ++ signtr
              tcQueryType = UDTT.Judgment signtr' contxt (CCG.sem node) DTT.Type
              tcQueryKind = UDTT.Judgment signtr' contxt (CCG.sem node) DTT.Kind
+         -- TY.typeCheckが実際にtypecheckをする関数    
          in ParseTreeAndFelicityChecks node signtr' tcQueryType $ 
+              
               let tcDiagrams = takeNbest (CP.nTypeCheck ps) $ (TY.typeCheck prover (CP.verbose ps) tcQueryType)
                                                               <|> (TY.typeCheck prover (CP.verbose ps) tcQueryKind)
               in parallelM tcDiagrams $ \tcDiagram -> 
                    let contxt' = (DTT.trm $ Tree.node tcDiagram):contxt
                    in (tcDiagram, parseWithTypeCheck ps prover signtr' contxt' texts)
+              
+              -- n番目のtype check resultについてのみ推論を行いたいときは上の5行の代わりにこれを使う-------------------------------------
+              {-
+              if length texts == 2 -- 残りの文の数
+                then let tcDiagrams = takeN (CP.nTypeCheck ps) $ (TY.typeCheck prover (CP.verbose ps) tcQueryType)
+                                                                 <|> (TY.typeCheck prover (CP.verbose ps) tcQueryKind)
+                     in parallelM tcDiagrams $ \tcDiagram -> 
+                          let contxt' = (DTT.trm $ Tree.node tcDiagram):contxt
+                          in (tcDiagram, parseWithTypeCheck ps prover signtr' contxt' texts)
+                else let tcDiagrams = takeNbest (CP.nTypeCheck ps) $ (TY.typeCheck prover (CP.verbose ps) tcQueryType)
+                                                                     <|> (TY.typeCheck prover (CP.verbose ps) tcQueryKind)
+                     in parallelM tcDiagrams $ \tcDiagram -> 
+                          let contxt' = (DTT.trm $ Tree.node tcDiagram):contxt
+                          in (tcDiagram, parseWithTypeCheck ps prover signtr' contxt' texts)
+              -}
+              ----------------------------------------------------------------------------------------------------------------
 
 -- | Take n element from the top of the list.
 -- | If n < 0, it returns all the elements.
 takeNbest :: Int -> ListT IO a -> ListT IO a
 takeNbest n l
-  | n >= 0 = ListT.take n l
+  | n >= 1 = ListT.take n l
   | otherwise = l
- 
+
+-- n番目のtype check resultのみを取り出す
+takeN :: Int -> ListT IO a -> ListT IO a
+takeN n l
+  | n >= 1 = ListT.drop (n-1) $ ListT.take n l
+  -- | n <= (length l) = ListT.drop (n-1) $ ListT.take n l
+  | otherwise = l
+
 -- | prints a CCG node (=i-th parsing result for a given sentence) in a specified style (=HTML|text|XML|TeX)
 printParseResult :: S.Handle -> Style -> Int -> Bool -> Bool -> String -> ParseResult -> IO ()
 printParseResult h style sid noTypeCheck posTagOnly title (SentenceAndParseTrees sentence parseTrees) = do
