@@ -30,6 +30,7 @@ import Parser.LangOptions (defaultJpOptions,defaultEnOptions)
 import qualified Interface as I
 import qualified Interface.Text as T
 import qualified Interface.HTML as I
+import qualified Interface.PrintParseResult as PPR
 import qualified JSeM as J
 import qualified JSeM.XML as J
 import qualified DTS.UDTTdeBruijn as UDTT
@@ -278,13 +279,16 @@ lightblueMain (Options lang commands style proverName filepath beamW nParse nTyp
     -- |
     lightblueMainLocal (Parse output) parseSetting contents = do
       let handle = S.stdout
-          prover = NLI.getProver proverName $ QT.ProofSearchSetting (Just maxDepth) Nothing (Just QT.Intuitionistic) False
+          prover = NLI.getProver proverName $ QT.defaultProofSearchSetting {
+            QT.maxDepth = (Just maxDepth),
+            QT.maxTime = (Just maxTime)
+            }
           parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity)] [] $ T.lines contents
           posTagOnly = case output of 
                          I.TREE -> False
                          I.POSTAG -> True
       S.hPutStrLn handle $ I.headerOf style
-      NLI.printParseResult handle style 1 noTypeCheck posTagOnly "input" parseResult
+      PPR.printParseResult handle style 1 noTypeCheck posTagOnly "input" parseResult
       S.hPutStrLn handle $ I.footerOf style
     --
     -- | JSeM command
@@ -298,7 +302,10 @@ lightblueMain (Options lang commands style proverName filepath beamW nParse nTyp
             | nSample < 0 = parsedJSeM'
             | otherwise = take nSample parsedJSeM'
           handle = S.stdout
-          prover = NLI.getProver proverName $ QT.ProofSearchSetting (Just maxDepth) (Just maxTime) (Just QT.Intuitionistic) False
+          prover = NLI.getProver proverName $ QT.defaultProofSearchSetting {
+            QT.maxDepth = Just maxDepth, 
+            QT.maxTime = Just maxTime
+            }
       S.hPutStrLn handle $ I.headerOf style
       pairs <- forM parsedJSeM'' $ \j -> do
         let title = "JSeM-ID " ++ (StrictT.unpack $ J.jsem_id j)
@@ -310,33 +317,7 @@ lightblueMain (Options lang commands style proverName filepath beamW nParse nTyp
         let sentences = postpend (map T.fromStrict $ J.premises j) (T.fromStrict $ J.hypothesis j)
             -- 公理を追加していない
             parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity)] [] sentences
-            -- 727の公理(破くー破れる)
-            -- parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity), ("yabuku",DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.App (DTT.App (DTT.App (DTT.Con "破く/やぶく/ガヲ") (DTT.Var 0)) (DTT.Var 1)) (DTT.Var 2)) (DTT.App (DTT.App (DTT.Con "破れる/やぶれる/ガ") (DTT.Var 1)) (DTT.Var 3))))))] [] sentences
-            -- 727の公理2(上手くいっていないが要検討)(破くー破れる)
-            -- parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity), ("yabuku", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.Con "破く/やぶく/ガヲ") (DTT.Var 1)) (DTT.Var 2)) (DTT.Var 0))) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "破れる/やぶれる/ガ") (DTT.Var 2)) (DTT.Var 0))))))] [] sentences
-            -- 728の公理(閉めるー閉まる)
-            -- parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity), ("shimeru",DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.App (DTT.App (DTT.App (DTT.Con "閉める/しめる/ガヲ") (DTT.Var 0)) (DTT.Var 1)) (DTT.Var 2)) (DTT.App (DTT.App (DTT.Con "閉まる/しまる/ガ") (DTT.Var 1)) (DTT.Var 3))))))] [] sentences       
-            -- 519の公理(小さなー大きな)
-            -- parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity), ("chiisana", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.App (DTT.Con "小さな/ちいさな") (DTT.Var 0)) (DTT.Pi (DTT.App (DTT.Con "大きな/おおきな") (DTT.Var 1)) (DTT.Bot))))] [] sentences
-            -- 520の公理(大きなー小さな)
-            -- parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity), ("ookina", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.App (DTT.Con "大きな/おおきな") (DTT.Var 0)) (DTT.Pi (DTT.App (DTT.Con "小さな/ちいさな") (DTT.Var 1)) (DTT.Bot))))] [] sentences
-            -- 523の公理(開くー閉まる)
-            -- parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity), ("hiraku",DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.App (DTT.App (DTT.Con "開く/ひらく/ガ") (DTT.Var 1)) (DTT.Var 0)) (DTT.Pi (DTT.App (DTT.App (DTT.Con "閉まる/しまる/ガ") (DTT.Var 2)) (DTT.Var 1)) (DTT.Bot)))))] [] sentences
-            -- 524の公理(閉まるー開く)
-            -- parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity), ("shimaru",DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.App (DTT.App (DTT.Con "閉まる/しまる/ガ") (DTT.Var 1)) (DTT.Var 0)) (DTT.Pi (DTT.App (DTT.App (DTT.Con "開く/あく/ガ") (DTT.Var 2)) (DTT.Var 1)) (DTT.Bot)))))] [] sentences
-            -- 開くの公理2(開くー閉まる)
-            -- parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity), ("hitraku2", DTT.Pi(DTT.Entity) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "開く/ひらく/ガ") (DTT.Var 1)) (DTT.Var 0))) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "閉まる/しまる/ガ") (DTT.Var 2)) (DTT.Var 0))) (DTT.Bot))))] [] sentences     
-            -- NRI01の公理(関心を高めるー興味がある) NRIが普通名詞
-            -- parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity), ("kanshin-kyomi", (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "関心") (DTT.Var 1)) (DTT.Var 0)) (DTT.App (DTT.App (DTT.Con "＃ヘ") (DTT.Var 3)) (DTT.Var 2)))) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ノ") (DTT.Var 3)) (DTT.Var 1)) (DTT.App (DTT.App (DTT.App (DTT.Con "高める/たかめる/ガヲ") (DTT.Var 2)) (DTT.Var 5)) (DTT.Var 6))))) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "興味") (DTT.Var 1)) (DTT.Var 0)))) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.App (DTT.Con "＃存在/ガガ２ニ") (DTT.Var 3)) (DTT.Proj (DTT.Fst) (DTT.Var 1))) (DTT.Var 4)) (DTT.Var 0))))))))))] [] sentences
-            -- NRI01の公理(関心を高めるー興味がある) NRIが固有名詞
-            -- parseResult = NLI.parseWithTypeCheck parseSetting prover [("dummy",DTT.Entity), ("kanshin-kyomi", (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "関心") (DTT.Var 1)) (DTT.Var 0)) (DTT.App (DTT.App (DTT.Con "＃ヘ") (DTT.Var 3)) (DTT.Var 2)))) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ノ") (DTT.Var 3)) (DTT.Var 1)) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.Con "高める/たかめる/ガヲ") (DTT.Var 3)) (DTT.Con "NRI")) (DTT.Var 0)))))) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "興味") (DTT.Var 1)) (DTT.Var 0)))) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.App (DTT.Con "＃存在/ガガニ") (DTT.Var 3)) (DTT.Proj (DTT.Fst) (DTT.Var 1))) (DTT.Var 4)) (DTT.Var 0))))))))] [] sentences
-            -- eventを最初に取る
-            -- ("kanshin-kyomi", (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "関心") (DTT.Var 1)) (DTT.Var 0)) (DTT.App (DTT.App (DTT.Con "＃ヘ") (DTT.Var 3)) (DTT.Var 2)))) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ノ") (DTT.Var 3)) (DTT.Var 1)) (DTT.App (DTT.App (DTT.App (DTT.Con "高める/たかめる/ガヲ") (DTT.Var 2)) (DTT.Con "NRI")) (DTT.Var 5))))) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "興味") (DTT.Var 1)) (DTT.Var 0)))) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.App (DTT.Con "＃存在/ガガニ") (DTT.Var 3)) (DTT.Proj (DTT.Fst) (DTT.Var 1))) (DTT.Var 4)) (DTT.Var 0)))))))))
-            -- eventが公理の後件に
-            -- ("kanshin-kyomi", (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "関心") (DTT.Var 1)) (DTT.Var 0)) (DTT.App (DTT.App (DTT.Con "＃ヘ") (DTT.Var 3)) (DTT.Var 2)))) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ノ") (DTT.Var 3)) (DTT.Var 1)) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.Con "高める/たかめる/ガヲ") (DTT.Var 3)) (DTT.Con "NRI")) (DTT.Var 0)))))) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "興味") (DTT.Var 1)) (DTT.Var 0)))) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.App (DTT.Con "＃存在/ガガニ") (DTT.Var 3)) (DTT.Proj (DTT.Fst) (DTT.Var 1))) (DTT.Var 4)) (DTT.Var 0))))))))
-            --顧客だけ適用
-            -- ("kanshin-kyomi", (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "関心") (DTT.Var 1)) (DTT.Var 0)) (DTT.App (DTT.App (DTT.Con "＃ヘ") (DTT.Var 3)) (DTT.Var 2)))) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ノ") (DTT.Con "顧客/こきゃく")) (DTT.Var 1)) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.Con "高める/たかめる/ガヲ") (DTT.Var 3)) (DTT.Con "NRI")) (DTT.Var 0)))))) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "興味") (DTT.Var 1)) (DTT.Var 0)))) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.App (DTT.Con "＃存在/ガガニ") (DTT.Var 3)) (DTT.Proj (DTT.Fst) (DTT.Var 1))) (DTT.Con "顧客/こきゃく")) (DTT.Var 0)))))))
-        NLI.printParseResult handle style 1 noTypeCheck False title parseResult
+        PPR.printParseResult handle style 1 noTypeCheck False title parseResult
         inferenceLabels <- toList $ NLI.trawlParseResult parseResult
         let groundTruth = J.jsemLabel2YesNo $ J.answer j
             prediction = case inferenceLabels of
@@ -439,7 +420,7 @@ test = do
       termM = UDTT.Sigma UDTT.Entity (UDTT.App (UDTT.Con "f") (UDTT.Var 0))
       typeA = DTT.Type
       tcq = UDTT.Judgment signature context termM typeA
-      prover = NLI.getProver NLI.Wani $ QT.ProofSearchSetting Nothing Nothing (Just QT.Intuitionistic) False
+      prover = NLI.getProver NLI.Wani QT.defaultProofSearchSetting
   typeCheckResults <- toList $ typeCheck prover False tcq
   T.putStrLn $ I.startMathML
   T.putStrLn $ I.toMathML $ DTTwN.fromDeBruijnSignature signature
