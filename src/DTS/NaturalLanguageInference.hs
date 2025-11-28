@@ -116,20 +116,12 @@ parseWithTypeCheck' _ _ _ [] [] = NoSentence     -- ^ Context is empty and no se
 parseWithTypeCheck' ps prover signtr (typ:contxt) [] = -- ^ Context is given and no more sentence (= All parse done)
   if CP.noInference ps
     then NoSentence
-    else let signtr' = [("高める/たかめる/ガヲ", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Type)))),
-                        ("関心", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Type))),
-                        ("＃ヘ", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Type))),
-                        ("＃ノ", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Type))),
-                        ("NRI", DTT.Entity),
-                        ("＃存在/ガガニ", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Type))))),
-                        ("興味", DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Type))),
-                        ("投資", DTT.Entity),
-                        ("顧客/こきゃく", DTT.Entity)]
-             typ' = (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "関心") (DTT.Var 1)) (DTT.Var 0)) (DTT.App (DTT.App (DTT.Con "＃ヘ") (DTT.Var 3)) (DTT.Var 2)))) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ノ") (DTT.Con "顧客/こきゃく")) (DTT.Var 1)) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.Con "高める/たかめる/ガヲ") (DTT.Var 3)) (DTT.Con "NRI")) (DTT.Var 0)))))) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "興味") (DTT.Var 1)) (DTT.Var 0)))) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.App (DTT.Con "＃存在/ガガニ") (DTT.Var 3)) (DTT.Proj (DTT.Fst) (DTT.Var 1))) (DTT.Con "顧客/こきゃく")) (DTT.Var 0))))))
-             contxt' = [DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "関心") (DTT.Var 1)) (DTT.Var 0)) (DTT.App (DTT.App (DTT.Con "＃ヘ") (DTT.Var 3)) (DTT.Var 2)))) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ノ") (DTT.Var 3)) (DTT.Var 1)) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.Con "高める/たかめる/ガヲ") (DTT.Var 3)) (DTT.Con "NRI")) (DTT.Var 0)))))) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "興味") (DTT.Var 1)) (DTT.Var 0)))) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.App (DTT.Con "＃存在/ガガニ") (DTT.Var 3)) (DTT.Proj (DTT.Fst) (DTT.Var 1))) (DTT.Var 4)) (DTT.Var 0))))))]
-             psqPos = DTT.ProofSearchQuery signtr' contxt' $ typ' -- contxtがpremise, typがhypothesis
+    else let {- signtr' = [("T.Text", DTT.Preterm)] -}
+             -- typ' = DTT.Preterm
+             -- contxt' = [DTT.Preterm]
+             psqPos = DTT.ProofSearchQuery signtr contxt $ typ -- contxtがpremise, typがhypothesis
              resultPos = takeNbest (CP.nProof ps) $ prover psqPos
-             psqNeg = DTT.ProofSearchQuery signtr contxt $ DTT.Pi typ' DTT.Bot
+             psqNeg = DTT.ProofSearchQuery signtr contxt $ DTT.Pi typ DTT.Bot
              resultNeg = takeNbest (CP.nProof ps) $ prover psqNeg
          in InferenceResults (QueryAndDiagrams psqPos resultPos) (QueryAndDiagrams psqNeg resultNeg)
 parseWithTypeCheck' ps prover signtr contxt ((text,nodes):rests) = 
@@ -147,9 +139,9 @@ parseWithTypeCheck' ps prover signtr contxt ((text,nodes):rests) =
                    let contxt' = (DTT.trm $ Tree.node tcDiagram):contxt
                    in (tcDiagram, parseWithTypeCheck' ps prover signtr' contxt' rests)
               
-              -- n番目のtype check resultについてのみ推論を行いたいときは上の5行の代わりにこれを使う-------------------------------------
+              -- 最後のtype check resultについてのみ推論を行いたいときは上の5行の代わりにこれを使う-------------------------------------
               {-
-              if length texts == 2 -- 残りの文の数
+              if length rests == 2 -- 残りの文の数
                 then let tcDiagrams = takeN (CP.nTypeCheck ps) $ (TY.typeCheck prover (CP.verbose ps) tcQueryType)
                                                                  <|> (TY.typeCheck prover (CP.verbose ps) tcQueryKind)
                      in parallelM tcDiagrams $ \tcDiagram -> 
