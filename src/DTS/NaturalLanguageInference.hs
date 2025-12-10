@@ -116,11 +116,14 @@ parseWithTypeCheck' _ _ _ [] [] = NoSentence     -- ^ Context is empty and no se
 parseWithTypeCheck' ps prover signtr (typ:contxt) [] = -- ^ Context is given and no more sentence (= All parse done)
   if CP.noInference ps
     then NoSentence
-    else let psqPos = DTT.ProofSearchQuery signtr contxt $ typ 
+    else let -- signtr' = [(LazyT.Text, Preterm)]
+             -- contxt' = [Preterm]
+             -- typ' = Preterm
+             psqPos = DTT.ProofSearchQuery signtr contxt $ typ
              resultPos = takeNbest (CP.nProof ps) $ prover psqPos
              psqNeg = DTT.ProofSearchQuery signtr contxt $ DTT.Pi typ DTT.Bot
              resultNeg = takeNbest (CP.nProof ps) $ prover psqNeg
-         in InferenceResults (QueryAndDiagrams psqPos resultPos) (QueryAndDiagrams psqNeg resultNeg)
+         in InferenceResults (QueryAndDiagrams psqPos resultPos) (QueryAndDiagrams psqNeg resultNeg) 
 parseWithTypeCheck' ps prover signtr contxt ((text,nodes):rests) = 
   SentenceAndParseTrees text $ 
     parallelM nodes $ \node -> 
