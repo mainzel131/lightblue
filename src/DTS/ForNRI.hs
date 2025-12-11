@@ -44,5 +44,14 @@ nriAxiom = [("dummy", DTT.Entity)
             
             x0:entityに顧客をx1:entityに投資を適用
             ("kanshin-kyomi", (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "関心") (DTT.Var 1)) (DTT.Var 0)) (DTT.App (DTT.App (DTT.Con "＃ヘ") (DTT.Con "投資")) (DTT.Var 2)))) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ノ") (DTT.Con "顧客/こきゃく")) (DTT.Var 1)) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.Con "高める/たかめる/ガヲ") (DTT.Var 3)) (DTT.Con "NRI")) (DTT.Var 0)))))) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.Con "興味") (DTT.Var 1)) (DTT.Var 0)))) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.App (DTT.Con "＃存在/ガガニ") (DTT.Con "投資")) (DTT.Proj (DTT.Fst) (DTT.Var 1))) (DTT.Con "顧客/こきゃく")) (DTT.Var 0))))))
+            
+            パーズ結果に合わせて描いた「顧客は投資に興味がある」
+            (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "興味") (DTT.Var 1)) (DTT.Var 0)) (DTT.Top)))) (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.App (DTT.App (DTT.Con "＃存在/ガガニ") (DTT.Con "投資")) (DTT.Proj (DTT.Fst) (DTT.Var 1))) (DTT.Con "顧客/こきゃく")) (DTT.Var 0)) (DTT.Top))))
+            
+            パーズ結果に合わせて描いた「NRIは顧客の投資への関心を高める」
+            (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "関心") (DTT.Var 1)) (DTT.Var 0)) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ヘ") (DTT.Con "投資")) (DTT.Var 2)) (DTT.Top)))) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ノ") (DTT.Con "顧客/こきゃく")) (DTT.Var 1)) (DTT.Sigma (DTT.Entity) (DTT.Sigma(DTT.App (DTT.App (DTT.App (DTT.Con "高める/たかめる/ガヲ") (DTT.Var 3)) (DTT.Con "NRI")) (DTT.Var 0)) (DTT.Top))))))
+            
+            パーズ結果に合わせて描いた公理←これを使う
+            ("kanshin-kyomi", (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Entity) (DTT.Pi (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "関心") (DTT.Var 1)) (DTT.Var 0)) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ヘ") (DTT.Con "投資")) (DTT.Var 2)) (DTT.Top)))) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ノ") (DTT.Con "顧客/こきゃく")) (DTT.Var 1)) (DTT.Sigma (DTT.Entity) (DTT.Sigma(DTT.App (DTT.App (DTT.App (DTT.Con "高める/たかめる/ガヲ") (DTT.Var 3)) (DTT.Con "NRI")) (DTT.Var 0)) (DTT.Top)))))) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "興味") (DTT.Var 1)) (DTT.Var 0)) (DTT.Top)))) (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.App (DTT.App (DTT.Con "＃存在/ガガニ") (DTT.Con "投資")) (DTT.Proj (DTT.Fst) (DTT.Var 1))) (DTT.Con "顧客/こきゃく")) (DTT.Var 0)) (DTT.Top))))))))
             -}
             ]
