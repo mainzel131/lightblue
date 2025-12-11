@@ -118,8 +118,8 @@ parseWithTypeCheck' ps prover signtr (typ:contxt) [] = -- ^ Context is given and
     then NoSentence
     else let -- signtr' = [(LazyT.Text, Preterm)]
              -- contxt' = [Preterm]
-             -- typ' = Preterm
-             psqPos = DTT.ProofSearchQuery signtr contxt $ typ
+             typ' = (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.Sigma (DTT.Entity) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "関心") (DTT.Var 1)) (DTT.Var 0)) (DTT.App (DTT.App (DTT.Con "＃ヘ") (DTT.Con "投資")) (DTT.Var 2)))) (DTT.Sigma (DTT.App (DTT.App (DTT.Con "＃ノ") (DTT.Con "顧客/こきゃく")) (DTT.Var 1)) (DTT.Sigma (DTT.Entity) (DTT.App (DTT.App (DTT.App (DTT.Con "高める/たかめる/ガヲ") (DTT.Var 3)) (DTT.Con "NRI")) (DTT.Var 0)))))) 
+             psqPos = DTT.ProofSearchQuery signtr contxt $ typ'
              resultPos = takeNbest (CP.nProof ps) $ prover psqPos
              psqNeg = DTT.ProofSearchQuery signtr contxt $ DTT.Pi typ DTT.Bot
              resultNeg = takeNbest (CP.nProof ps) $ prover psqNeg
