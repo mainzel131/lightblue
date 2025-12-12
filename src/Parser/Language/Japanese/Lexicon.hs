@@ -32,6 +32,7 @@ import qualified Parser.Language.Japanese.Juman.CallJuman as JU --lightblue
 import qualified Parser.Language.Japanese.Filter as JFilter     --lightblue
 import DTS.UDTTdeBruijn as UDTT                                 --lightblue
 import qualified DTS.DTTdeBruijn as DTT                         --lightblue
+import qualified DTS.ForJSeM as FJSM
 
 type UDTTpreterm = UDTT.Preterm
 type Signature = DTT.Signature
@@ -58,7 +59,7 @@ setupLexicon langOptions sentence = do
   --  4. Setting up compound nouns (returned from an execution of JUMAN)
   jumanCN <- JU.findCompoundNouns (morphaName langOptions) sentence'
   --  5. 1+2+3+4
-  let numeration = jumandicParsed ++ mylexiconFiltered ++ commonnouns ++ propernames ++ jumanCN
+  let numeration = jumandicParsed ++ mylexiconFiltered ++ commonnouns ++ propernames ++ jumanCN ++ FJSM.verbsLexicon
       tokens = reverse $ T.foldl' (\tkns c -> (T.singleton c):tkns) [] sentence'
   return (tokens, numeration `seq` numeration)
 
