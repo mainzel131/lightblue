@@ -1,4 +1,4 @@
-module DTS.ForNRI (
+module DTS.ForJSeM (
   verbsLexicon
   , verbsAxiom
 ) where
